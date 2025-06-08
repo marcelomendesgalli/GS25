@@ -2,6 +2,10 @@
 
 Sistema inteligente e acessível para prevenção de riscos climáticos em escolas públicas da cidade de São Paulo, com foco inicial em altas temperaturas.
 
+## Videos
+
+Acesse aqui: https://www.youtube.com/@marcelo201443/featured
+
 ## 📋 Descrição do Projeto
 
 O **Green Light Monitor** é uma plataforma integrada de monitoramento ambiental que envia alertas automáticos em situações de calor extremo, auxiliando gestores escolares na tomada de decisões preventivas. Com o aumento de ondas de calor no Brasil, diversas escolas públicas não possuem climatização adequada, e este projeto visa fornecer informações em tempo real para gestores, professores e coordenadores.
