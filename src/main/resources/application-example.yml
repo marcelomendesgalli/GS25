@@ -1,0 +1,141 @@
+# Configuração de Exemplo - Escola Clima Monitor
+# Copie este arquivo para application-local.yml e ajuste conforme necessário
+
+spring:
+  application:
+    name: green-light-monitor
+
+  # Configuração do Banco de Dados
+  datasource:
+    # Para desenvolvimento com H2 (padrão)
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+    
+    # Para produção com PostgreSQL (descomente e configure)
+    # url: jdbc:postgresql://localhost:5432/escola_clima_monitor
+    # driver-class-name: org.postgresql.Driver
+    # username: postgres
+    # password: sua_senha
+
+  # Configuração JPA/Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # Para desenvolvimento
+      # ddl-auto: validate   # Para produção
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+        # dialect: org.hibernate.dialect.PostgreSQLDialect  # Para PostgreSQL
+
+  # Console H2 (apenas desenvolvimento)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # Configuração do RabbitMQ
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    
+  # Configuração OAuth2
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: SEU_GOOGLE_CLIENT_ID
+            client-secret: SEU_GOOGLE_CLIENT_SECRET
+            scope:
+              - email
+              - profile
+          github:
+            client-id: SEU_GITHUB_CLIENT_ID
+            client-secret: SEU_GITHUB_CLIENT_SECRET
+            scope:
+              - user:email
+              - read:user
+
+  # Configuração Spring AI (opcional)
+  ai:
+    openai:
+      api-key: SUA_OPENAI_API_KEY
+      chat:
+        options:
+          model: gpt-3.5-turbo
+          temperature: 0.7
+
+# Configurações da aplicação
+app:
+  rabbitmq:
+    queue:
+      sensor-readings: sensor.readings
+      alerts: alerts
+    exchange:
+      sensor: sensor.exchange
+      alerts: alerts.exchange
+    routing-key:
+      sensor-readings: sensor.readings.key
+      alerts: alerts.key
+
+# Configuração de Logs
+logging:
+  level:
+    com.greenlight.monitor: DEBUG
+    org.springframework.security: INFO
+    org.springframework.amqp: INFO
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/escola-clima-monitor.log
+
+# Configuração do servidor
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# Configuração de Management/Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# Configurações customizadas
+escola-clima:
+  alertas:
+    temperatura:
+      critica: 35.0
+      alta: 30.0
+      elevada: 28.0
+    umidade:
+      baixa: 30.0
+      alta: 80.0
+  limpeza:
+    dias-manter-leituras: 90
+    dias-manter-alertas: 30
+  notificacoes:
+    email:
+      habilitado: true
+    sms:
+      habilitado: false
+  ai:
+    habilitado: true
+    timeout-segundos: 30
+

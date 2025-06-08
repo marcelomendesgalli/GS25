@@ -1,0 +1,145 @@
+spring:
+  application:
+    name: green-light-monitor
+  
+  # Configuração do banco de dados
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+  
+  # Configuração JPA/Hibernate
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  
+  # Configuração H2 Console (para desenvolvimento)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  # Configuração Thymeleaf
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML
+  
+  # Configuração OAuth2
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:your-google-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:your-google-client-secret}
+            scope:
+              - openid
+              - profile
+              - email
+          github:
+            client-id: ${GITHUB_CLIENT_ID:your-github-client-id}
+            client-secret: ${GITHUB_CLIENT_SECRET:your-github-client-secret}
+            scope:
+              - user:email
+              - read:user
+  
+  # Configuração RabbitMQ
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
+  
+  # Configuração Spring AI (opcional)
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:your-openai-api-key}
+      chat:
+        options:
+          model: gpt-3.5-turbo
+          temperature: 0.7
+
+# Configurações da aplicação
+app:
+  rabbitmq:
+    queue:
+      sensor-readings: sensor.readings
+      alerts: alerts
+    exchange:
+      sensor: sensor.exchange
+      alerts: alerts.exchange
+    routing-key:
+      sensor-readings: sensor.readings.key
+      alerts: alerts.key
+  
+  alerts:
+    temperature:
+      warning: 28.0
+      critical: 32.0
+    humidity:
+      warning-low: 30.0
+      warning-high: 70.0
+      critical-low: 20.0
+      critical-high: 80.0
+
+# Configurações do servidor
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  error:
+    whitelabel:
+      enabled: false
+
+# Configurações de logging
+logging:
+  level:
+    com.greenlight.monitor: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.amqp: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Configurações de produção (perfil prod)
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:escola_clima}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  
+  h2:
+    console:
+      enabled: false
+  
+  thymeleaf:
+    cache: true
+
+logging:
+  level:
+    com.greenlight.monitor: INFO
+    org.springframework.security: WARN
+    org.springframework.amqp: WARN
+

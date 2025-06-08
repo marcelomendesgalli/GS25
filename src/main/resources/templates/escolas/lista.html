@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" 
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::content}, ~{::scripts})}">
+<head>
+    <title>Escolas - Escola Clima Monitor</title>
+</head>
+<body>
+    <th:block th:fragment="content">
+        <div class="container-fluid py-4">
+            <!-- Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-1">
+                                <i class="fas fa-school text-primary me-2"></i>
+                                Gerenciar Escolas
+                            </h1>
+                            <p class="text-muted mb-0">
+                                Visualize e gerencie as escolas cadastradas no sistema de monitoramento.
+                            </p>
+                        </div>
+                        <div sec:authorize="hasAnyRole('ADMIN', 'GESTOR')">
+                            <a th:href="@{/escolas/nova}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Nova Escola
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0">
+                            <h6 class="card-title mb-0">
+                                <i class="fas fa-filter text-primary me-2"></i>
+                                Filtros de Busca
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="get" th:action="@{/escolas}" id="filterForm">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label for="nome" class="form-label">Nome da Escola</label>
+                                        <input type="text" class="form-control" id="nome" name="nome" 
+                                               th:value="${filtroNome}" placeholder="Digite o nome...">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="cidade" class="form-label">Cidade</label>
+                                        <input type="text" class="form-control" id="cidade" name="cidade" 
+                                               th:value="${filtroCidade}" placeholder="Digite a cidade...">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="estado" class="form-label">Estado</label>
+                                        <select class="form-select" id="estado" name="estado">
+                                            <option value="">Todos</option>
+                                            <option value="SP" th:selected="${filtroEstado == 'SP'}">São Paulo</option>
+                                            <option value="RJ" th:selected="${filtroEstado == 'RJ'}">Rio de Janeiro</option>
+                                            <option value="MG" th:selected="${filtroEstado == 'MG'}">Minas Gerais</option>
+                                            <option value="RS" th:selected="${filtroEstado == 'RS'}">Rio Grande do Sul</option>
+                                            <option value="PR" th:selected="${filtroEstado == 'PR'}">Paraná</option>
+                                            <option value="SC" th:selected="${filtroEstado == 'SC'}">Santa Catarina</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label for="ativo" class="form-label">Status</label>
+                                        <select class="form-select" id="ativo" name="ativo">
+                                            <option value="">Todos</option>
+                                            <option value="true" th:selected="${filtroAtivo == true}">Ativo</option>
+                                            <option value="false" th:selected="${filtroAtivo == false}">Inativo</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <div class="btn-group w-100">
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-search me-1"></i>Buscar
+                                            </button>
+                                            <a th:href="@{/escolas}" class="btn btn-outline-secondary">
+                                                <i class="fas fa-times"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="card-title mb-0">
+                                    Resultados 
+                                    <span class="badge bg-primary ms-2" th:text="${totalElements}">0</span>
+                                </h6>
+                                <div class="d-flex align-items-center gap-2">
+                                    <small class="text-muted">Ordenar por:</small>
+                                    <select class="form-select form-select-sm" id="sortSelect" style="width: auto;">
+                                        <option value="nome,asc" th:selected="${sort == 'nome' and direction == 'asc'}">Nome (A-Z)</option>
+                                        <option value="nome,desc" th:selected="${sort == 'nome' and direction == 'desc'}">Nome (Z-A)</option>
+                                        <option value="cidade,asc" th:selected="${sort == 'cidade' and direction == 'asc'}">Cidade (A-Z)</option>
+                                        <option value="dataCriacao,desc" th:selected="${sort == 'dataCriacao' and direction == 'desc'}">Mais Recentes</option>
+                                        <option value="dataCriacao,asc" th:selected="${sort == 'dataCriacao' and direction == 'asc'}">Mais Antigas</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <!-- Empty State -->
+                            <div th:if="${#lists.isEmpty(escolas.content)}" class="text-center py-5">
+                                <i class="fas fa-school fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Nenhuma escola encontrada</h5>
+                                <p class="text-muted mb-3">
+                                    Não há escolas que correspondam aos filtros aplicados.
+                                </p>
+                                <a th:href="@{/escolas/nova}" class="btn btn-primary" sec:authorize="hasAnyRole('ADMIN', 'GESTOR')">
+                                    <i class="fas fa-plus me-2"></i>Cadastrar Primeira Escola
+                                </a>
+                            </div>
+
+                            <!-- Schools Table -->
+                            <div th:if="${!#lists.isEmpty(escolas.content)}" class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Nome</th>
+                                            <th>Localização</th>
+                                            <th>Sensores</th>
+                                            <th>Status</th>
+                                            <th>Criada em</th>
+                                            <th class="text-center">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="escola : ${escolas.content}">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0 me-3">
+                                                        <div class="bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center" 
+                                                             style="width: 40px; height: 40px;">
+                                                            <i class="fas fa-school text-white"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0" th:text="${escola.nome}">Nome da Escola</h6>
+                                                        <small class="text-muted">ID: <span th:text="${escola.id}">1</span></small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div>
+                                                    <span th:text="${escola.cidade}">Cidade</span>, 
+                                                    <span th:text="${escola.estado}">UF</span>
+                                                </div>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>Localização
+                                                </small>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info" th:text="${#lists.size(escola.sensores)}">0</span>
+                                                <small class="text-muted d-block">sensores</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge" 
+                                                      th:classappend="${escola.ativo ? 'bg-success' : 'bg-secondary'}"
+                                                      th:text="${escola.ativo ? 'Ativo' : 'Inativo'}">Status</span>
+                                            </td>
+                                            <td>
+                                                <span th:text="${#temporals.format(escola.dataCriacao, 'dd/MM/yyyy')}">Data</span>
+                                                <small class="text-muted d-block" 
+                                                       th:text="${#temporals.format(escola.dataCriacao, 'HH:mm')}">Hora</small>
+                                            </td>
+                                            <td class="text-center">
+                                                <div class="btn-group btn-group-sm">
+                                                    <a th:href="@{/escolas/{id}(id=${escola.id})}" 
+                                                       class="btn btn-outline-primary" title="Ver Detalhes">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a th:href="@{/escolas/{id}/editar(id=${escola.id})}" 
+                                                       class="btn btn-outline-warning" title="Editar"
+                                                       sec:authorize="hasAnyRole('ADMIN', 'GESTOR')">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                    <button type="button" class="btn btn-outline-success" 
+                                                            th:if="${!escola.ativo}" title="Ativar"
+                                                            th:onclick="'toggleStatus(' + ${escola.id} + ', true)'"
+                                                            sec:authorize="hasAnyRole('ADMIN', 'GESTOR')">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-secondary" 
+                                                            th:if="${escola.ativo}" title="Desativar"
+                                                            th:onclick="'toggleStatus(' + ${escola.id} + ', false)'"
+                                                            sec:authorize="hasAnyRole('ADMIN', 'GESTOR')">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            <div th:if="${totalPages > 1}" class="card-footer bg-white border-0">
+                                <nav aria-label="Navegação de páginas">
+                                    <ul class="pagination justify-content-center mb-0">
+                                        <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                                            <a class="page-link" th:href="@{/escolas(page=0, size=${size}, sort=${sort}, direction=${direction}, nome=${filtroNome}, cidade=${filtroCidade}, estado=${filtroEstado}, ativo=${filtroAtivo})}">
+                                                <i class="fas fa-angle-double-left"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                                            <a class="page-link" th:href="@{/escolas(page=${currentPage - 1}, size=${size}, sort=${sort}, direction=${direction}, nome=${filtroNome}, cidade=${filtroCidade}, estado=${filtroEstado}, ativo=${filtroAtivo})}">
+                                                <i class="fas fa-angle-left"></i>
+                                            </a>
+                                        </li>
+                                        
+                                        <li class="page-item" th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}" 
+                                            th:if="${pageNum >= currentPage - 2 and pageNum <= currentPage + 2}"
+                                            th:classappend="${pageNum == currentPage ? 'active' : ''}">
+                                            <a class="page-link" th:href="@{/escolas(page=${pageNum}, size=${size}, sort=${sort}, direction=${direction}, nome=${filtroNome}, cidade=${filtroCidade}, estado=${filtroEstado}, ativo=${filtroAtivo})}" 
+                                               th:text="${pageNum + 1}">1</a>
+                                        </li>
+                                        
+                                        <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+                                            <a class="page-link" th:href="@{/escolas(page=${currentPage + 1}, size=${size}, sort=${sort}, direction=${direction}, nome=${filtroNome}, cidade=${filtroCidade}, estado=${filtroEstado}, ativo=${filtroAtivo})}">
+                                                <i class="fas fa-angle-right"></i>
+                                            </a>
+                                        </li>
+                                        <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+                                            <a class="page-link" th:href="@{/escolas(page=${totalPages - 1}, size=${size}, sort=${sort}, direction=${direction}, nome=${filtroNome}, cidade=${filtroCidade}, estado=${filtroEstado}, ativo=${filtroAtivo})}">
+                                                <i class="fas fa-angle-double-right"></i>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden forms for actions -->
+        <form id="ativarForm" method="post" style="display: none;">
+            <input type="hidden" name="_method" value="post">
+        </form>
+        <form id="desativarForm" method="post" style="display: none;">
+            <input type="hidden" name="_method" value="post">
+        </form>
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script>
+            // Handle sort change
+            document.getElementById('sortSelect').addEventListener('change', function() {
+                const [sort, direction] = this.value.split(',');
+                const url = new URL(window.location);
+                url.searchParams.set('sort', sort);
+                url.searchParams.set('direction', direction);
+                url.searchParams.set('page', '0'); // Reset to first page
+                window.location.href = url.toString();
+            });
+
+            // Toggle status function
+            function toggleStatus(escolaId, ativar) {
+                const action = ativar ? 'ativar' : 'desativar';
+                const message = ativar ? 'ativar' : 'desativar';
+                
+                if (confirm(`Tem certeza que deseja ${message} esta escola?`)) {
+                    const form = document.getElementById(ativar ? 'ativarForm' : 'desativarForm');
+                    form.action = `/escolas/${escolaId}/${action}`;
+                    form.submit();
+                }
+            }
+
+            // Auto-submit form on filter change (with debounce)
+            let filterTimeout;
+            document.querySelectorAll('#filterForm input, #filterForm select').forEach(element => {
+                element.addEventListener('input', function() {
+                    clearTimeout(filterTimeout);
+                    filterTimeout = setTimeout(() => {
+                        document.getElementById('filterForm').submit();
+                    }, 500);
+                });
+            });
+
+            // Add loading states to action buttons
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (this.type === 'button' && this.onclick) {
+                        // For toggle buttons
+                        const originalHtml = this.innerHTML;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                        this.disabled = true;
+                    } else if (this.href && !this.href.includes('#')) {
+                        // For navigation buttons
+                        const originalHtml = this.innerHTML;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                        this.disabled = true;
+                        
+                        setTimeout(() => {
+                            this.innerHTML = originalHtml;
+                            this.disabled = false;
+                        }, 2000);
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html>
+

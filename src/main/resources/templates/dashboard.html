@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" 
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::content}, ~{::scripts})}">
+<head>
+    <title>Dashboard - Escola Clima Monitor</title>
+</head>
+<body>
+    <th:block th:fragment="content">
+        <div class="container-fluid py-4">
+            <!-- Welcome Header -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="h3 mb-1">
+                                <i class="fas fa-tachometer-alt text-primary me-2"></i>
+                                Dashboard
+                            </h1>
+                            <p class="text-muted mb-0">
+                                Bem-vindo, <span th:text="${nomeUsuario ?: 'Usuário'}">Usuário</span>! 
+                                Aqui está o resumo do monitoramento climático.
+                            </p>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted">
+                                <i class="fas fa-clock me-1"></i>
+                                Última atualização: <span id="lastUpdate"></span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row g-3 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-primary bg-gradient rounded-3 p-3">
+                                        <i class="fas fa-school text-white fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="text-muted mb-1">Escolas Ativas</h6>
+                                    <h3 class="mb-0" th:text="${totalEscolas ?: 0}">0</h3>
+                                    <small class="text-success">
+                                        <i class="fas fa-arrow-up me-1"></i>Monitoradas
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-success bg-gradient rounded-3 p-3">
+                                        <i class="fas fa-microchip text-white fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="text-muted mb-1">Sensores Ativos</h6>
+                                    <h3 class="mb-0" th:text="${totalEscolasComSensores ?: 0}">0</h3>
+                                    <small class="text-success">
+                                        <i class="fas fa-wifi me-1"></i>Online
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-warning bg-gradient rounded-3 p-3">
+                                        <i class="fas fa-exclamation-triangle text-white fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="text-muted mb-1">Alertas Ativos</h6>
+                                    <h3 class="mb-0" th:text="${alertasAtivos ?: 0}">0</h3>
+                                    <small class="text-warning">
+                                        <i class="fas fa-bell me-1"></i>Pendentes
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="bg-danger bg-gradient rounded-3 p-3">
+                                        <i class="fas fa-fire text-white fa-2x"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="text-muted mb-1">Alertas Críticos</h6>
+                                    <h3 class="mb-0" th:text="${alertasCriticos ?: 0}">0</h3>
+                                    <small class="text-danger">
+                                        <i class="fas fa-exclamation-circle me-1"></i>Urgente
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Row -->
+            <div class="row g-4">
+                <!-- Escolas com Sensores -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white border-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                    Escolas Monitoradas
+                                </h5>
+                                <a th:href="@{/escolas}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>Ver Todas
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${#lists.isEmpty(escolasComSensores)}" class="text-center py-5">
+                                <i class="fas fa-school fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">Nenhuma escola com sensores ativos</h6>
+                                <p class="text-muted mb-0">Configure sensores nas escolas para começar o monitoramento.</p>
+                            </div>
+                            
+                            <div th:if="${!#lists.isEmpty(escolasComSensores)}" class="row g-3">
+                                <div class="col-md-6" th:each="escola : ${escolasComSensores}">
+                                    <div class="border rounded-3 p-3 h-100 escola-card">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-1" th:text="${escola.nome}">Nome da Escola</h6>
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-wifi me-1"></i>Online
+                                            </span>
+                                        </div>
+                                        <p class="text-muted small mb-2">
+                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                            <span th:text="${escola.cidade + ', ' + escola.estado}">Cidade, UF</span>
+                                        </p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">
+                                                <i class="fas fa-microchip me-1"></i>
+                                                <span th:text="${#lists.size(escola.sensores)}">0</span> sensores
+                                            </small>
+                                            <a th:href="@{/escolas/{id}(id=${escola.id})}" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-eye me-1"></i>Detalhes
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas Recentes -->
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-header bg-white border-0 pb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-bell text-warning me-2"></i>
+                                    Alertas Recentes
+                                </h5>
+                                <a href="#" class="btn btn-outline-warning btn-sm">
+                                    <i class="fas fa-list me-1"></i>Ver Todos
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${#lists.isEmpty(alertasRecentes)}" class="text-center py-4">
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <h6 class="text-muted">Nenhum alerta ativo</h6>
+                                <p class="text-muted small mb-0">Todas as condições estão normais.</p>
+                            </div>
+                            
+                            <div th:if="${!#lists.isEmpty(alertasRecentes)}">
+                                <div class="alert-item border-start border-3 ps-3 mb-3" 
+                                     th:each="alerta : ${alertasRecentes}"
+                                     th:classappend="${alerta.nivel == 'Crítico' ? 'border-danger' : 'border-warning'}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1" th:text="${alerta.tipo}">Tipo do Alerta</h6>
+                                            <p class="text-muted small mb-1" th:text="${alerta.mensagem}">Mensagem do alerta</p>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                <span th:text="${#temporals.format(alerta.timestamp, 'dd/MM HH:mm')}">Data/Hora</span>
+                                            </small>
+                                        </div>
+                                        <span class="badge ms-2" 
+                                              th:classappend="${alerta.nivel == 'Crítico' ? 'bg-danger' : 'bg-warning'}"
+                                              th:text="${alerta.nivel}">Nível</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="row mt-4" sec:authorize="hasAnyRole('ADMIN', 'GESTOR')">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-bolt text-primary me-2"></i>
+                                Ações Rápidas
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <a th:href="@{/escolas/nova}" class="btn btn-outline-primary w-100">
+                                        <i class="fas fa-plus me-2"></i>Nova Escola
+                                    </a>
+                                </div>
+                                <div class="col-md-3" sec:authorize="hasRole('ADMIN')">
+                                    <a href="#" class="btn btn-outline-success w-100">
+                                        <i class="fas fa-microchip me-2"></i>Novo Sensor
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="#" class="btn btn-outline-info w-100">
+                                        <i class="fas fa-chart-bar me-2"></i>Relatórios
+                                    </a>
+                                </div>
+                                <div class="col-md-3" sec:authorize="hasRole('ADMIN')">
+                                    <a href="#" class="btn btn-outline-secondary w-100">
+                                        <i class="fas fa-cog me-2"></i>Configurações
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+
+    <th:block th:fragment="scripts">
+        <script>
+            // Update last update time
+            function updateLastUpdateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('pt-BR');
+                document.getElementById('lastUpdate').textContent = timeString;
+            }
+            
+            // Update time immediately and then every minute
+            updateLastUpdateTime();
+            setInterval(updateLastUpdateTime, 60000);
+            
+            // Add hover effects to cards
+            document.querySelectorAll('.escola-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+                    this.style.transition = 'all 0.3s ease';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'none';
+                });
+            });
+            
+            // Auto-refresh data every 5 minutes
+            setInterval(function() {
+                // In a real application, you would make an AJAX call here
+                // to refresh the dashboard data without reloading the page
+                console.log('Auto-refresh triggered');
+            }, 300000); // 5 minutes
+            
+            // Add loading states to action buttons
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    if (this.href && !this.href.includes('#')) {
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Carregando...';
+                        this.disabled = true;
+                        
+                        // Re-enable after navigation (fallback)
+                        setTimeout(() => {
+                            this.innerHTML = originalText;
+                            this.disabled = false;
+                        }, 2000);
+                    }
+                });
+            });
+        </script>
+    </th:block>
+</body>
+</html>
+
